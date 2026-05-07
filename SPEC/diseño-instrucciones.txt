@@ -1,0 +1,86 @@
+Actúa como un desarrollador experto en Python. Utiliza el siguiente archivo de especificaciones para generar la estructura del proyecto y el código del módulo [Nombre del Módulo]. Asegúrate de seguir estrictamente el stack tecnológico mencionado.
+------------------------------
+## Documento de Especificaciones Técnicas: Hydracalc
+## 1. Stack Tecnológico (Obligatorio)
+
+* Lenguaje: Python 3.12+
+* Framework UI: PySide6 (Qt for Python).
+* Motor Gráfico: QPainter (para componentes personalizados y renderizado 2D).
+* Base de Datos: SQLite 3 (usar sqlite3 o QtSql).
+* Arquitectura: MVC (Modelo-Vista-Controlador).
+* Idioma del Código: Inglés (variables, funciones, clases).
+* Idioma de la UI: Español. [1, 2] 
+
+## 2. Requerimientos de Software (Funcionales)
+
+* Gestión de Datos: CRUD completo de [especificar entidad, ej: Inventario] almacenado en SQLite.
+* Visualización: Un canvas personalizado que utilice QPainter para dibujar [especificar: gráficas, diagramas, mapas] de forma dinámica.
+* Exportación: Capacidad de guardar el contenido del canvas como imagen (PNG/JPG).
+* Persistencia: La aplicación debe recordar la posición de la ventana y el último archivo abierto.
+
+## 3. Especificaciones del Frontend (UI/UX)
+
+* Estilo: Utilizar un archivo .qss (Qt Style Sheets) independiente para un look "Dark Mode".
+* Componentes Principales:
+* QMainWindow como base.
+   * QToolBar con iconos para acciones rápidas.
+   * Un QWidget personalizado que sobreescriba paintEvent para la lógica de QPainter.
+   * QTableView con un QSqlTableModel para visualización de datos.
+* Interactividad: El canvas de QPainter debe responder a eventos de mouse (zoom y drag).
+
+## 4. Especificaciones del Backend
+
+* Esquema DB:
+* Lógica de Negocio: Clase separada para cálculos matemáticos antes de pasar los datos a la vista.
+
+## 5. Reglas de Desarrollo (Constraints)
+
+* Modularidad: El código debe estar dividido en archivos: main.py, database.py, gui.py y styles.qss.
+* Tipado: Usar Type Hints de Python en todas las funciones.
+* Documentación: Docstrings en formato Google Style.
+* Manejo de Errores: Implementar bloques try-except específicos para la conexión a la base de datos y operaciones de I/O.
+
+------------------------------
+-----------------------------
+## Especificaciones: Simulador de Redes Hidráulicas (Multi-fluido)
+Basado en estas especificaciones, genera la clase HydraulicSolver en Python que utilice SciPy para resolver las presiones en los nodos de una red abbierta, de una red cerrada y también de una red híbrida, y la clase NetworkCanvas en PySide6 que permita dibujar estos nodos usando QPainter."
+
+## 1. Núcleo de Cálculo (Backend & Física)
+
+* Lenguaje: Python 3.12+ (con tipado fuerte).
+* Librerías Matemáticas: NumPy y SciPy para resolver sistemas de ecuaciones no lineales.
+* Modelos Físicos:
+* Líquidos: Ecuación de Darcy-Weisbach y Hazen-Williams.
+   * Gases: Modelos de flujo compresible (Isotérmico / Adiabático).
+   * Pérdidas: Cálculo de pérdidas primarias (fricción) y secundarias (accesorios).
+* Base de Datos (SQLite): Tablas para:
+* Fluids: Propiedades (densidad, viscosidad, compresibilidad).
+   * Pipes: Materiales (rugosidad), diámetros y longitudes.
+   * Components: Bombas, válvulas, tanques y nodos de demanda.
+
+## 2. Interfaz Gráfica (Frontend - PySide6)
+
+* Canvas de Diseño (QPainter):
+* Sistema de rejilla (Grid) con Snap-to-grid.
+   * Representación vectorial de tuberías (líneas) y nodos (círculos/iconos).
+   * Interactividad: Drag & Drop de componentes, selección múltiple y zoom con rueda del ratón.
+* Panel de Propiedades: QDockWidget lateral para editar parámetros del elemento seleccionado en tiempo real.
+* Visualización de Resultados: Capas de color sobre las tuberías según la presión o velocidad (Heatmap funcional).
+
+## 3. Arquitectura del Software
+
+* Patrón: Document-View Architecture.
+* Clases Principales:
+* FluidNetwork: Clase maestra que contiene los grafos de la red.
+   * HydraulicSolver: Clase encargada de las iteraciones de Hardy Cross o el Método del Gradiente.
+   * NetworkCanvas(QWidget): El motor de renderizado basado en QPainter.
+
+## 4. Requerimientos de Idioma y Estilo
+¡Importante!
+* Código: Inglés (Standard PEP 8).(métodos, funciones, variables,nombres de carpetas, nombres de archivo, etc.)
+* Interfaz de Usuario: Español 
+* Unidades: en Sistema Internacional y posibilidad de Imperial.
+* Documentación: Comentarios técnicos explicando las fórmulas físicas utilizadas en cada método.
+
+------------------------------
+

@@ -1,28 +1,28 @@
 CREATE TABLE IF NOT EXISTS fittings (
 	nominal_diam INTEGER,
 	symbol INTEGER,
-	"type" NVARCHAR(50),
-	"nominal_mm" NVARCHAR(50),
+	type NVARCHAR(50),
+	nominal_mm NVARCHAR(50),
 	nominal_in NVARCHAR(50),
 	descripction NVARCHAR(50),
 	K REAL
 );
 
 CREATE TABLE IF NOT EXISTS liquids (
-	"name" VARCHAR(50),
-	"  formula" NVARCHAR(50),
-	" temperature_c" REAL,
-	"pressure_bar_g" INTEGER,
-	"density_kg_m3" REAL,
-	"viscosity_cp" REAL,
-	"vapor_pressure_kPa_a" REAL,
-	"state" INTEGER
+	name VARCHAR(50),
+	formula NVARCHAR(50),
+	temperature_c REAL,
+	pressure_bar_g INTEGER,
+	density_kg_m3 REAL,
+	viscosity_cp REAL,
+	vapor_pressure_kPa_a REAL,
+	state INTEGER
 );
 
 CREATE TABLE IF NOT EXISTS pipes_in (
 	material VARCHAR,
 	schedule VARCHAR,
-	"nominal-mm" NVARCHAR,
+	nominal-mm NVARCHAR,
 	nominal_in NVARCHAR,
 	thickness_in REAL,
 	outiside_diam_in REAL,
