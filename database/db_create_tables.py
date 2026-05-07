@@ -72,7 +72,4 @@ class CreateDatabaseTables:
 
     def close(self):
         self.conn.close()
-
-if __name__ == "__main__":
-    db = TableManager()
-    db.close()
+        

@@ -1,105 +1,120 @@
 import sys
-from PySide6.QtWidgets import (QMainWindow, QApplication, QWidget, QVBoxLayout, 
-                             QHBoxLayout, QToolBar, QStatusBar, QSplitter, 
-                             QGroupBox, QFormLayout, QDoubleSpinBox, QLineEdit,
-                             QLabel, QFrame)
-from PySide6.QtGui import QAction, QIcon, QKeySequence
-from PySide6.QtCore import Qt
-from gui.canvas import NetworkCanvas # Asumiendo que tu archivo se llama canvas.py
+from PySide6.QtWidgets import (QMainWindow, QSplitter, QToolBar, QStatusBar, 
+                             QApplication, QHBoxLayout, QWidget)
+from PySide6.QtGui import QAction, QIcon, QActionGroup
+from PySide6.QtCore import Qt, QSize
 
-class PropertyPanel(QFrame):
-    """Panel lateral para edición de atributos"""
-    def __init__(self):
-        super().__init__()
-        self.setFrameStyle(QFrame.StyledPanel | QFrame.Sunken)
-        self.setFixedWidth(280)
-        
-        layout = QVBoxLayout(self)
-        
-        # Grupo de Información del Nodo
-        group_node = QGroupBox("Propiedades del Elemento")
-        form = QFormLayout(group_node)
-        
-        self.lbl_id = QLabel("-")
-        self.spin_press = QDoubleSpinBox()
-        self.spin_press.setSuffix(" bar")
-        self.spin_elev = QDoubleSpinBox()
-        self.spin_elev.setSuffix(" m")
-        self.txt_tag = QLineEdit()
-        
-        form.addRow("ID Interno:", self.lbl_id)
-        form.addRow("Presión:", self.spin_press)
-        form.addRow("Elevación:", self.spin_elev)
-        form.addRow("Etiqueta:", self.txt_tag)
-        
-        layout.addWidget(group_node)
-        layout.addStretch() # Empuja todo hacia arriba
-
-    def update_node_data(self, data):
-        self.lbl_id.setText(str(data.id))
-        self.spin_press.setValue(data.pressure)
-        self.spin_elev.setValue(data.elevation)
-        self.txt_tag.setText(data.notes)
+from gui.canvas import NetworkCanvas
+from gui.property_panel import PropertyPanel
+from database.database_manager import DatabaseManager
 
 class MainWindow(QMainWindow):
     def __init__(self):
         super().__init__()
         self.setWindowTitle("HydraCalc - Simulador de Redes Hidráulicas")
-        self.resize(1200, 800)
-
-        # 1. Componentes Centrales
+        self.resize(1280, 850)
         self.canvas = NetworkCanvas()
-        self.sidebar = PropertyPanel()
+        # 1. Inicializar motor de datos
+        self.db_manager = DatabaseManager()
+        self.current_units = "mm" # Por defecto sistema métrico
+
+        # 2. Componentes principales
+        self.canvas = NetworkCanvas()
+        self.sidebar = PropertyPanel(self.db_manager)
         
-        # 2. Organización con Splitter (permite ajustar el ancho del panel)
+        # 3. Layout con Splitter
         self.splitter = QSplitter(Qt.Horizontal)
         self.splitter.addWidget(self.sidebar)
         self.splitter.addWidget(self.canvas)
-        self.splitter.setStretchFactor(1, 1) # El canvas crece más
+        self.splitter.setStretchFactor(1, 4) # El canvas ocupa más espacio
         
         self.setCentralWidget(self.splitter)
 
-        # 3. Llamada a configuraciones
+        # 4. Configuración de UI
         self.create_menus()
         self.create_toolbars()
         self.create_statusbar()
-        
-        # 4. Conexión de Señales
+
+        # 5. Inicialización de datos y señales
+        self.sidebar.populate_initial_data()
         self.canvas.nodeSelected.connect(self.sidebar.update_node_data)
 
     def create_menus(self):
         menu_bar = self.menuBar()
-        
-        # Menú Archivo
         file_menu = menu_bar.addMenu("&Archivo")
-        exit_action = QAction("Salir", self)
-        exit_action.setShortcut(QKeySequence.Quit)
-        exit_action.triggered.connect(self.close)
-        file_menu.addAction(exit_action)
-
-        # Menú Herramientas
-        tool_menu = menu_bar.addMenu("&Herramientas")
-        calc_action = QAction("Calcular Red", self)
-        tool_menu.addAction(calc_action)
+        file_menu.addAction("Nuevo Proyecto")
+        file_menu.addAction("Guardar")
+        file_menu.addSeparator()
+        file_menu.addAction("Salir", self.close)
 
     def create_toolbars(self):
-        # Toolbar Principal
-        main_toolbar = QToolBar("Barra Principal")
-        self.addToolBar(main_toolbar)
+        # --- Toolbar Superior (General) ---
+        main_toolbar = self.addToolBar("General")
+        main_toolbar.setIconSize(QSize(24, 24))
         
-        # Acciones de ejemplo (puedes usar iconos con QIcon)
-        main_toolbar.addAction("Nuevo")
-        main_toolbar.addAction("Abrir")
-        main_toolbar.addAction("Guardar")
+        # Acciones de Unidades
+        self.unit_mm_action = QAction("Métrico (mm)", self)
+        self.unit_in_action = QAction("Imperial (in)", self)
+        self.unit_mm_action.setCheckable(True)
+        self.unit_in_action.setCheckable(True)
+        self.unit_mm_action.setChecked(True)
+        
+        unit_group = QActionGroup(self)
+        unit_group.addAction(self.unit_mm_action)
+        unit_group.addAction(self.unit_in_action)
+        
+        main_toolbar.addActions([self.unit_mm_action, self.unit_in_action])
         main_toolbar.addSeparator()
         
-        # Toolbar de Dibujo
+        # Conectar cambio de unidades
+        self.unit_mm_action.triggered.connect(lambda: self.change_units("mm"))
+        self.unit_in_action.triggered.connect(lambda: self.change_units("in"))
+
+        # --- Toolbar Lateral (Herramientas de Ingeniería) ---
         draw_toolbar = QToolBar("Dibujo")
-        self.addToolBar(Qt.LeftToolBarArea, draw_toolbar) # A la izquierda
-        draw_toolbar.addAction("Node")
-        draw_toolbar.addAction("Pipe")
-        draw_toolbar.addAction("Pump")
-        draw_toolbar.addAction("Valve")
+        draw_toolbar.setIconSize(QSize(32, 32))
+        self.addToolBar(Qt.LeftToolBarArea, draw_toolbar)
+
+        # Definición de Acciones con Iconos (Asegúrate que existan en la carpeta)
+        self.select_action = QAction(QIcon("resources/icons/select.png"), "Seleccionar", self)
+        self.node_action = QAction(QIcon("resources/icons/node.png"), "Añadir Nodo", self)
+        self.pipe_action = QAction(QIcon("resources/icons/pipe.png"), "Añadir Tubería", self)
+        self.valve_action = QAction(QIcon("resources/icons/valve.png"), "Añadir Válvula", self)
+        self.tank_action = QAction(QIcon("resources/icons/tank.png"), "Añadir Tanque", self)
+
+        # Hacerlas accionables
+        self.tools_group = QActionGroup(self)
+        for action in [self.select_action, self.node_action, self.pipe_action, self.valve_action, self.tank_action]:
+            action.setCheckable(True)
+            draw_toolbar.addAction(action)
+            self.tools_group.addAction(action)
+
+        self.select_action.setChecked(True)
+
+        # Conexiones de modo
+        self.select_action.triggered.connect(lambda: self.change_interact_mode("SELECT"))
+        self.node_action.triggered.connect(lambda: self.change_interact_mode("ADD_NODE"))
+        self.pipe_action.triggered.connect(lambda: self.change_interact_mode("ADD_PIPE"))
+        self.valve_action.triggered.connect(lambda: self.change_interact_mode("ADD_VALVE"))
+        self.tank_action.triggered.connect(lambda: self.change_interact_mode("ADD_TANK"))
+    
+    def change_interact_mode(self, mode):
+        self.canvas.interact_mode = mode
+        messages = {
+            "SELECT": "Modo: Selección de elementos",
+            "ADD_NODE": "Modo: Añadir Nodo (Clic en el lienzo)",
+            "ADD_PIPE": "Modo: Añadir Tubería (Selecciona nodo origen)",
+            "ADD_VALVE": "Modo: Añadir Válvula", 
+            "ADD_TANK": "Modo: Añadir Tanque",     
+        }
+        self.statusBar().showMessage(messages.get(mode, "Listo"))
+
+    def change_units(self, unit_type):
+        """Cambia el sistema de tablas entre mm e in"""
+        self.current_units = unit_type
+        # Aquí notificaremos al DatabaseManager en el futuro para cambiar de tabla
+        self.statusBar().showMessage(f"Sistema cambiado a: {unit_type}")
+        self.sidebar.update_sizes() # Refrescar lista de diámetros
 
     def create_statusbar(self):
         self.setStatusBar(QStatusBar(self))
@@ -107,9 +122,7 @@ class MainWindow(QMainWindow):
 
 if __name__ == "__main__":
     app = QApplication(sys.argv)
-    # Aplicar un estilo oscuro básico (opcional)
-    app.setStyle("Fusion")
-    
-    win = MainWindow()
-    win.show()
+    app.setStyle("Fusion") # Estilo limpio y profesional
+    window = MainWindow()
+    window.show()
     sys.exit(app.exec())
