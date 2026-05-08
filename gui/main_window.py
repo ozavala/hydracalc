@@ -92,7 +92,14 @@ class MainWindow(QMainWindow):
         self.pipe_action = QAction(QIcon("resources/icons/pipe.png"), "Añadir Tubería", self)
         self.valve_action = QAction(QIcon("resources/icons/valve.png"), "Añadir Válvula", self)
         self.tank_action = QAction(QIcon("resources/icons/tank.png"), "Añadir Tanque", self)
-
+        self.pressure_action = QAction(QIcon("resources/icons/pressure.png"), "Punto de Presión", self)
+        self.pressure_action.setCheckable(True)
+        self.tools_group.addAction(self.pressure_action)
+        
+        self.pressure_action.triggered.connect(lambda: self.change_interact_mode("ADD_PRESSURE"))
+        
+        draw_toolbar.addAction(self.pressure_action)
+        
         # Hacerlas accionables
         self.tools_group = QActionGroup(self)
         for action in [self.select_action, self.node_action, self.pipe_action, self.valve_action, self.tank_action]:
