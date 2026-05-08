@@ -12,7 +12,7 @@ class NodeData:
     notes: str
 
 class NetworkCanvas(QWidget):
-    nodeSelected = Signal(NodeData)
+    nodeSelected = Signal(dict)
 
     def __init__(self, parent=None):
         super().__init__(parent)
@@ -146,12 +146,13 @@ class NetworkCanvas(QWidget):
         
     def handle_selection(self, world_pos):
         """Busca y selecciona un nodo bajo el cursor"""
-        self.selected_node_idx = None
+        #self.selected_node_idx = None
+                
         for i, node in enumerate(self.nodes):
             # Hit testing de 15 píxeles de radio
             if (node["pos"] - world_pos).manhattanLength() < 20:
                 self.selected_node_idx = i
-                self.nodeSelected.emit(node["data"])
+                self.nodeSelected.emit(node)
                 break
 
     def handle_pipe_creation(self, world_pos):
@@ -202,5 +203,29 @@ class NetworkCanvas(QWidget):
             
         super().mouseMoveEvent(event)
 
+    def update_item_data(self, item_id, field, value):
+        for node in self.nodes:
+            if node["data"].id == item_id:
+                # Actualizar el atributo correspondiente en NodeData
+                setattr(node["data"], field, value)
+                # Si el campo afecta al diccionario (como el tipo), podrías manejarlo aquí
+                print(f"Actualizado ID {item_id}: {field} -> {value}")
+                break
 
-    
+    def update_selected_node_data(self, new_values):
+        """Actualiza la memoria del nodo que está seleccionado actualmente"""
+        if self.selected_node_idx is not None:
+            node = self.nodes[self.selected_node_idx]
+            
+            # Actualizar el objeto NodeData (notes y elevation)
+            node["data"].notes = new_values["notes"]
+            node["data"].elevation = new_values["elevation"]
+            
+            node.update({
+                "liquid_level": new_values["liquid_level"],
+                "surface_pressure": new_values["surface_pressure"]
+            })
+            # Guardar valores específicos de Tanque en el diccionario del nodo
+            if self.node["type"] == "Tank":
+                self.node["liquid_level"] = new_values["liquid_level"]
+                self.node["surface_pressure"] = new_values["surface_pressure"]

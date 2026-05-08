@@ -7,38 +7,49 @@ from PySide6.QtCore import Qt, QSize
 from gui.canvas import NetworkCanvas
 from gui.property_panel import PropertyPanel
 from database.database_manager import DatabaseManager
+from PySide6.QtCore import Signal
+
 
 class MainWindow(QMainWindow):
+    data_changed_signal = Signal(dict)
     def __init__(self):
         super().__init__()
-        self.setWindowTitle("HydraCalc - Simulador de Redes Hidráulicas")
-        self.resize(1280, 850)
-        self.canvas = NetworkCanvas()
-        # 1. Inicializar motor de datos
-        self.db_manager = DatabaseManager()
-        self.current_units = "mm" # Por defecto sistema métrico
+        self.setWindowTitle("HydraCalc")
+        self.resize(1200, 800)
 
-        # 2. Componentes principales
+        # 1. Primero los motores de datos
+        self.db_manager = DatabaseManager()
         self.canvas = NetworkCanvas()
         self.sidebar = PropertyPanel(self.db_manager)
-        
-        # 3. Layout con Splitter
+
+        # 2. LUEGO creas los widgets (El orden importa)
+        self.canvas = NetworkCanvas()
+        self.sidebar = PropertyPanel(self.db_manager) # <--- Se crea AQUÍ
+
+        # 3. LUEGO los organizas en el layout/splitter
         self.splitter = QSplitter(Qt.Horizontal)
         self.splitter.addWidget(self.sidebar)
         self.splitter.addWidget(self.canvas)
-        self.splitter.setStretchFactor(1, 4) # El canvas ocupa más espacio
-        
         self.setCentralWidget(self.splitter)
 
-        # 4. Configuración de UI
-        self.create_menus()
-        self.create_toolbars()
-        self.create_statusbar()
-
-        # 5. Inicialización de datos y señales
-        self.sidebar.populate_initial_data()
+        # 4. FINALMENTE haces las conexiones de señales
+        # Ahora self.sidebar y self.canvas ya existen y no darán AttributeError
         self.canvas.nodeSelected.connect(self.sidebar.update_node_data)
+        #self.sidebar.data_changed_signal.connect(self.canvas.update_selected_node_data)
 
+        # 5. Inicializar datos de la interfaz
+        self.sidebar.populate_initial_data()
+        self.create_toolbars()
+        
+        self.sidebar.data_changed_signal.connect(self.canvas.update_selected_node_data)
+        self.setup_ui()
+        
+    def setup_ui(self):
+        self.splitter = QSplitter(Qt.Horizontal)
+        self.splitter.addWidget(self.sidebar)
+        self.splitter.addWidget(self.canvas)
+        self.setCentralWidget(self.splitter)
+    
     def create_menus(self):
         menu_bar = self.menuBar()
         file_menu = menu_bar.addMenu("&Archivo")
